@@ -34,6 +34,29 @@ namespace MsTestTrxLogger
         }
 
         /// <summary>
+        /// Clean off empty namespaces
+        /// </summary>
+        private void CleanXmlNamespaces(XDocument doc)
+        {
+            if (doc?.Root == null)
+                return;
+
+            foreach (var node in doc.Root.Descendants())
+            {
+                // Sanity check
+                if (node.Parent == null)
+                    continue;
+
+                // Clean namespace attribute
+                if (node.Name.NamespaceName == "")
+                {
+                    node.Attributes("xmlns").Remove();
+                    node.Name = node.Parent.Name.Namespace + node.Name.LocalName;
+                }
+            }
+        }
+
+        /// <summary>
         /// Calculates a hash of the string and copies the first 128 bits of the hash to a new Guid.
         /// </summary>
         private Guid GuidFromString(string data)
@@ -247,6 +270,8 @@ namespace MsTestTrxLogger
                         new XAttribute("queueing", _testRunStarted.ToString("o")),
                         new XAttribute("start", _testRunStarted.ToString("o")))
                     ));
+
+            CleanXmlNamespaces(doc);
 
             Console.WriteLine("Finished generating TRX output...");
 
